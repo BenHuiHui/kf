@@ -6,5 +6,5 @@
 #PBS -N project
 
 cd ${PBS_O_WORKDIR}
-module load tensorflow
+module load tensorflow/1.0
 python project.py

@@ -27,9 +27,6 @@ def read_images(batch_size):
 			imagepaths.append(DATASET_PATH + d[0])
 			labels.append(int(d[1]))
 
-			if len(labels) > 10:
-				break
-
     # Convert to Tensor
     imagepaths = tf.convert_to_tensor(imagepaths, dtype=tf.string)
     labels = tf.convert_to_tensor(labels, dtype=tf.int32)
@@ -90,9 +87,9 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 
 # Parameters
 learning_rate = 0.001
-num_steps = 10000
+num_steps = 100
 batch_size = 128
-display_step = 100
+display_step = 10
 
 # Network Parameters
 dropout = 0.75 # Dropout, probability to keep units
