@@ -87,9 +87,9 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 
 # Parameters
 learning_rate = 0.001
-num_steps = 100
+num_steps = 10000
 batch_size = 128
-display_step = 10
+display_step = 100
 
 # Network Parameters
 dropout = 0.75 # Dropout, probability to keep units
