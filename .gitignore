@@ -1,2 +1,4 @@
 transferred_train/*
+transferred_test/*
 train.csv
+sampleSubmission.csv
