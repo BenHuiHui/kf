@@ -13,6 +13,9 @@ IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
 
 
+print tf.__version__
+
+
 def read_images(batch_size):
     imagepaths, labels = list(), list()
     
