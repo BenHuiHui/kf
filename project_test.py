@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import os
 import csv
+import math
 
 DATASET_PATH = 'transferred_test/'
 
@@ -10,7 +11,7 @@ N_CLASSES = 132 # CHANGE HERE, total number of classes
 IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
-
+TOTAL_IMG = 48871
 
 print tf.__version__
 
@@ -18,8 +19,7 @@ print tf.__version__
 def read_images(batch_size):
     imagepaths, labels = list(), list()
 
-    for i in range(48871):
-    # for i in range(5):
+    for i in range(TOTAL_IMG):
         imagepaths.append(DATASET_PATH + str(i) + ".jpg")
         labels.append(0)
     print(imagepaths)
@@ -85,7 +85,7 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 # Parameters
 learning_rate = 0.001
 num_steps = 10000
-batch_size = 48871
+batch_size = 128
 display_step = 100
 
 # Network Parameters
@@ -118,16 +118,17 @@ with tf.Session() as sess:
 
     # Start the data queue
     tf.train.start_queue_runners()
-    # Training cycle
 
-    pred = sess.run([pred])
-    print(pred)
+    pred_total = np.array([])
+    for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
+        pred = sess.run([pred])
+        if step % display_step == 0:
+            print(pred)
+        pred_total = np.append(pred_total, pred)
 
-    it = np.nditer(pred, flags=['f_index'])
+    it = np.nditer(pred_total, flags=['f_index'])
 
     writer = csv.writer(open("test1.csv", "wb"))
     while not it.finished:
         writer.writerow([it.index, it[0]])
         it.iternext()
-
-
