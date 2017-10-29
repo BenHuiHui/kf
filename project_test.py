@@ -130,5 +130,5 @@ with tf.Session() as sess:
 
     writer = csv.writer(open("test1.csv", "wb"))
     while not it.finished:
-        writer.writerow([it.index, it[0]])
+        writer.writerow([str(it.index, int(it[0])])
         it.iternext()
