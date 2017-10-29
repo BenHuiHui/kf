@@ -11,8 +11,8 @@ N_CLASSES = 132 # CHANGE HERE, total number of classes
 IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
-# TOTAL_IMG = 48871
-TOTAL_IMG = 200
+TOTAL_IMG = 48871
+# TOTAL_IMG = 200
 
 print tf.__version__
 
