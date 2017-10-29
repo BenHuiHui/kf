@@ -128,7 +128,7 @@ with tf.Session() as sess:
 
     it = np.nditer(pred_total, flags=['f_index'])
 
-    writer = csv.writer(open("test1.csv", "wb"))
+    writer = csv.writer(open("test.csv", "wb"))
     while not it.finished:
-        writer.writerow([str(it.index, int(it[0])])
+        writer.writerow([str(it.index) + ".jpg", int(it[0])])
         it.iternext()
