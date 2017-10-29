@@ -12,9 +12,7 @@ IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
 TOTAL_IMG = 48871
-# TOTAL_IMG = 200
-
-print tf.__version__
+# TOTAL_IMG = 40
 
 
 def read_images(batch_size):
@@ -48,13 +46,18 @@ def read_images(batch_size):
     X, Y = tf.train.batch([image, label], batch_size=batch_size,
                           capacity=batch_size * 8,
                           num_threads=4)
-    print(X)
+    # print(X)
     return X, Y
 
 # Create model
 def conv_net(x, n_classes, dropout, reuse, is_training):
     # Define a scope for reusing the variables
     with tf.variable_scope('ConvNet', reuse=reuse):
+
+        #kernel = tf.get_variable('convo2d/kernel')
+        #print kernel
+        # kernel = tf.get_variable('ConvNet/conv2d/kernel:0')
+        # print kernel.eval()
 
         # Convolution Layer with 32 filters and a kernel size of 5
         conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
@@ -105,21 +108,27 @@ logits_test = conv_net(X, N_CLASSES, dropout, reuse=False, is_training=False)
 pred = tf.argmax(logits_test, 1)
 
 # Initialize the variables (i.e. assign their default value)
-init = tf.global_variables_initializer()
+# init = tf.global_variables_initializer()
+tf.reset_default_graph()
 
 x = tf.placeholder(tf.int32, [None, 1], name='input_placeholder')
 
 # Start training
 with tf.Session() as sess:
     # Initialize variables
-    sess.run(init)
+    # sess.run(init)
 
-    saver = tf.train.import_meta_graph('my_tf_model.ckpt.meta')
+    saver = tf.train.import_meta_graph('my_tf_model.meta')
     saver.restore(sess, tf.train.latest_checkpoint('./'))
 
     # Start the data queue
     tf.train.start_queue_runners()
 
+    # kernel = tf.get_variable('ConvNet/conv2d/kernel:0')
+    # print kernel.eval()
+    print 'Loaded kernel'
+    print sess.run('ConvNet/conv2d/kernel:0', feed_dict= {})
+    
     final_res = list()
 
     for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
