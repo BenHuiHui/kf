@@ -11,7 +11,7 @@ N_CLASSES = 132 # CHANGE HERE, total number of classes
 IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
-TOTAL_IMG = 48871
+TOTAL_IMG = 1
 # TOTAL_IMG = 200
 
 print tf.__version__
@@ -20,9 +20,9 @@ print tf.__version__
 def read_images(batch_size):
     imagepaths, labels = list(), list()
 
-    for i in range(TOTAL_IMG):
-        imagepaths.append(DATASET_PATH + str(i) + ".jpg")
-        labels.append(0)
+    # for i in range(TOTAL_IMG):
+    imagepaths.append(DATASET_PATH + "0.jpg")
+    labels.append(0)
 
     # Convert to Tensor
     imagepaths = tf.convert_to_tensor(imagepaths, dtype=tf.string)
@@ -48,7 +48,6 @@ def read_images(batch_size):
     X, Y = tf.train.batch([image, label], batch_size=batch_size,
                           capacity=batch_size * 8,
                           num_threads=4)
-    print(X)
     return X, Y
 
 # Create model
@@ -58,7 +57,6 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 
         # Convolution Layer with 32 filters and a kernel size of 5
         conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
-        # Max Pooling (down-sampling) with strides of 2 and kernel size of 2
         conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
 
         # Convolution Layer with 32 filters and a kernel size of 5
@@ -83,8 +81,7 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
     return out
 
 # Parameters
-learning_rate = 0.001
-batch_size = 128
+batch_size = 1
 display_step = 100
 
 # Network Parameters
@@ -101,26 +98,41 @@ X, _ = read_images(batch_size)
 # Create another graph for testing that reuse the same weights
 logits_test = conv_net(X, N_CLASSES, dropout, reuse=False, is_training=False)
 
+# logits_test = tf.layers.conv2d(X, 32, 5, activation=tf.nn.relu)
+# dense1 = tf.layers.dense(conv1, N_CLASSES)
+# logits_test = tf.nn.softmax(dense1)
+
 # Evaluate model (with test logits, for dropout to be disabled)
 pred = tf.argmax(logits_test, 1)
-
-# Initialize the variables (i.e. assign their default value)
-init = tf.global_variables_initializer()
 
 x = tf.placeholder(tf.int32, [None, 1], name='input_placeholder')
 
 # Start training
 with tf.Session() as sess:
     # Initialize variables
-    sess.run(init)
+    sess.run(tf.global_variables_initializer())
+    sess.run(tf.local_variables_initializer())
 
+    print([x.name for x in tf.global_variables()])
+    weights = sess.run('ConvNet/conv2d/kernel:0', feed_dict={})
+    print(weights)
     saver = tf.train.import_meta_graph('my_tf_model.ckpt.meta')
     saver.restore(sess, tf.train.latest_checkpoint('./'))
+    print([x.name for x in tf.global_variables()])
+    # print(tf.global_variables()[0])
 
     # Start the data queue
     tf.train.start_queue_runners()
 
     final_res = list()
+
+    weights = sess.run('ConvNet/conv2d/kernel:0', feed_dict={})
+    print(weights)
+    # x = tf.placeholder('float')
+    # output = tf.get_collection("output")[0]
+    #
+    # prediction = sess.run(output, feed_dict={x: X})
+    # print(prediction)
 
     for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
         res = sess.run([pred])
@@ -130,5 +142,5 @@ with tf.Session() as sess:
 
     writer = csv.writer(open("test.csv", "wb"))
     for idx, res in enumerate(final_res):
-        writer.writerow([str(idx) + ".jpg", int(res)])
+        writer.writerow([str(idx) + ".jpg", res])
 
