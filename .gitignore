@@ -1,5 +1,8 @@
 transferred_train/*
-transferred_test/*
+transferred_test*/*
 train.csv
 sampleSubmission.csv
 .idea/
+my_tf_model*
+checkpoint
+project2.py
