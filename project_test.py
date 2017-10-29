@@ -11,7 +11,8 @@ N_CLASSES = 132 # CHANGE HERE, total number of classes
 IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
-TOTAL_IMG = 48871
+# TOTAL_IMG = 48871
+TOTAL_IMG = 200
 
 print tf.__version__
 
@@ -22,7 +23,6 @@ def read_images(batch_size):
     for i in range(TOTAL_IMG):
         imagepaths.append(DATASET_PATH + str(i) + ".jpg")
         labels.append(0)
-    print(imagepaths)
 
     # Convert to Tensor
     imagepaths = tf.convert_to_tensor(imagepaths, dtype=tf.string)
@@ -84,7 +84,6 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 
 # Parameters
 learning_rate = 0.001
-num_steps = 10000
 batch_size = 128
 display_step = 100
 
@@ -108,27 +107,28 @@ pred = tf.argmax(logits_test, 1)
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
 
+x = tf.placeholder(tf.int32, [None, 1], name='input_placeholder')
+
 # Start training
 with tf.Session() as sess:
     # Initialize variables
     sess.run(init)
 
-    saver = tf.train.import_meta_graph('my_tf_model.meta')
+    saver = tf.train.import_meta_graph('my_tf_model.ckpt.meta')
     saver.restore(sess, tf.train.latest_checkpoint('./'))
 
     # Start the data queue
     tf.train.start_queue_runners()
 
-    pred_total = np.array([])
-    for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
-        pred = sess.run([pred])
-        if step % display_step == 0:
-            print(pred)
-        pred_total = np.append(pred_total, pred)
+    final_res = list()
 
-    it = np.nditer(pred_total, flags=['f_index'])
+    for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
+        res = sess.run([pred])
+        if step % display_step == 0:
+            print(res[0])
+        final_res.extend(res[0])
 
     writer = csv.writer(open("test.csv", "wb"))
-    while not it.finished:
-        writer.writerow([str(it.index) + ".jpg", int(it[0])])
-        it.iternext()
+    for idx, res in enumerate(final_res):
+        writer.writerow([str(idx) + ".jpg", int(res)])
+
