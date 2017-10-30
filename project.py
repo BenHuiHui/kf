@@ -4,6 +4,7 @@ import os
 import csv
 
 DATASET_PATH = 'transferred_train/'
+TEST_DATASET_PATH = 'transferred_test/'
 DATA_FILE = 'train.csv'
 
 # Image Parameters
@@ -58,7 +59,7 @@ def read_test_images(batch_size):
     imagepaths, labels = list(), list()
 
     for i in range(TOTAL_IMG):
-        imagepaths.append(DATASET_PATH + str(i) + ".jpg")
+        imagepaths.append(TEST_DATASET_PATH + str(i) + ".jpg")
         labels.append(0)
 
     # Convert to Tensor
