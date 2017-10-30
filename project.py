@@ -190,14 +190,15 @@ with tf.Session() as sess:
 
     print ("Predicting")
 
+    final_res = list()
     for step in range(TOTAL_IMG):
             res = sess.run([pred])
             print res[0]
             final_res.extend(res[0])
 
-        writer = csv.writer(open("test.csv", "wb"))
-        for idx, res in enumerate(final_res):
-            writer.writerow([str(idx) + ".jpg", int(res)])
+    writer = csv.writer(open("test.csv", "wb"))
+    for idx, res in enumerate(final_res):
+        writer.writerow([str(idx) + ".jpg", int(res)])
 
 
     # Save your model
