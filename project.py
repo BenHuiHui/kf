@@ -5,14 +5,13 @@ import csv
 
 DATASET_PATH = 'transferred_train/'
 TEST_DATASET_PATH = 'transferred_test/'
-# TEST_DATASET_PATH = 'transferred_train/'
 DATA_FILE = 'train.csv'
 output_filename = 'test_default_param.csv'
 
 # Image Parameters
 N_CLASSES = 132 # CHANGE HERE, total number of classes
-IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
-IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
+IMG_HEIGHT = 200 # CHANGE HERE, the image height to be resized to
+IMG_WIDTH = 200 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
 TOTAL_IMG = 48871
 
