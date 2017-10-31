@@ -5,7 +5,9 @@ import csv
 
 DATASET_PATH = 'transferred_train/'
 TEST_DATASET_PATH = 'transferred_test/'
+# TEST_DATASET_PATH = 'transferred_train/'
 DATA_FILE = 'train.csv'
+output_filename = 'test_default_param.csv'
 
 # Image Parameters
 N_CLASSES = 132 # CHANGE HERE, total number of classes
@@ -13,7 +15,6 @@ IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
 TOTAL_IMG = 48871
-# TOTAL_IMG = 40
 
 
 def read_images(batch_size):
@@ -123,7 +124,7 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
 
 # Parameters
 learning_rate = 0.001
-num_steps = 10000
+num_steps = 5000
 batch_size = 128
 display_step = 100
 test_batch_size = 1
@@ -192,11 +193,11 @@ with tf.Session() as sess:
 
     final_res = list()
     for step in range(TOTAL_IMG):
-            res = sess.run([pred])
+            res = sess.run([predict])
             print res[0]
             final_res.extend(res[0])
 
-    writer = csv.writer(open("test.csv", "wb"))
+    writer = csv.writer(open(output_filename, "wb"))
     for idx, res in enumerate(final_res):
         writer.writerow([str(idx) + ".jpg", int(res)])
 
