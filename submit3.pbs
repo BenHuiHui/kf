@@ -7,4 +7,4 @@
 
 cd ${PBS_O_WORKDIR}
 module load tensorflow/1.0
-python project.py
+python project3.py
