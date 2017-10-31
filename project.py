@@ -4,7 +4,8 @@ import os
 import csv
 
 DATASET_PATH = 'transferred_train/'
-TEST_DATASET_PATH = 'transferred_test/'
+# TEST_DATASET_PATH = 'transferred_test/'
+TEST_DATASET_PATH = 'transferred_train/'
 DATA_FILE = 'train.csv'
 
 # Image Parameters
@@ -127,6 +128,7 @@ num_steps = 10000
 batch_size = 128
 display_step = 100
 test_batch_size = 1
+output_filename = 'test_on_train_data.csv'
 
 # Network Parameters
 dropout = 0.75 # Dropout, probability to keep units
@@ -192,11 +194,11 @@ with tf.Session() as sess:
 
     final_res = list()
     for step in range(TOTAL_IMG):
-            res = sess.run([pred])
+            res = sess.run([predict])
             print res[0]
             final_res.extend(res[0])
 
-    writer = csv.writer(open("test.csv", "wb"))
+    writer = csv.writer(open(output_filename, "wb"))
     for idx, res in enumerate(final_res):
         writer.writerow([str(idx) + ".jpg", int(res)])
 
