@@ -2,10 +2,9 @@ import numpy as np
 import tensorflow as tf
 import os
 import csv
-import math
 
 DATASET_PATH = 'transferred_train/'
-TEST_PATH = 'transferred_test/'
+TEST_DATASET_PATH = 'transferred_test/'
 DATA_FILE = 'train.csv'
 
 # Image Parameters
@@ -13,26 +12,20 @@ N_CLASSES = 132 # CHANGE HERE, total number of classes
 IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
-# TOTAL_IMG = 48871
-TOTAL_IMG = 5
-
-print tf.__version__
+TOTAL_IMG = 48871
+# TOTAL_IMG = 40
 
 
 def read_images(batch_size):
     imagepaths, labels = list(), list()
     
     with open(DATA_FILE, 'r') as f:
-        reader = csv.reader(f)
-        headers = reader.next()
+		reader = csv.reader(f)
+		headers = reader.next()
 
-        i = 0
-        for d in reader:
-            if i > 1:
-                break
-            imagepaths.append(DATASET_PATH + d[0])
-            labels.append(int(d[1]))
-            i += 1
+		for d in reader:
+			imagepaths.append(DATASET_PATH + d[0])
+			labels.append(int(d[1]))
 
     # Convert to Tensor
     imagepaths = tf.convert_to_tensor(imagepaths, dtype=tf.string)
@@ -66,8 +59,8 @@ def read_test_images(batch_size):
     imagepaths, labels = list(), list()
 
     for i in range(TOTAL_IMG):
-        imagepaths.append(DATASET_PATH + str(i) + ".jpg")
-    labels.append(0)
+        imagepaths.append(TEST_DATASET_PATH + str(i) + ".jpg")
+        labels.append(0)
 
     # Convert to Tensor
     imagepaths = tf.convert_to_tensor(imagepaths, dtype=tf.string)
@@ -93,7 +86,9 @@ def read_test_images(batch_size):
     X, Y = tf.train.batch([image, label], batch_size=batch_size,
                           capacity=batch_size * 8,
                           num_threads=4)
+    # print(X)
     return X, Y
+
 
 # Create model
 def conv_net(x, n_classes, dropout, reuse, is_training):
@@ -127,11 +122,11 @@ def conv_net(x, n_classes, dropout, reuse, is_training):
     return out
 
 # Parameters
-learning_rate = 0.001
-# num_steps = 10000
-num_steps = 1
+learning_rate = 0.005
+num_steps = 10000
 batch_size = 128
 display_step = 100
+test_batch_size = 1
 
 # Network Parameters
 dropout = 0.75 # Dropout, probability to keep units
@@ -140,6 +135,7 @@ dropout = 0.75 # Dropout, probability to keep units
 dir_path = os.path.dirname(os.path.realpath(__file__))
 os.chdir(dir_path)
 X, Y = read_images(batch_size)
+X_test, _ = read_test_images(test_batch_size)
 
 # Because Dropout have different behavior at training and prediction time, we
 # need to create 2 distinct computation graphs that share the same weights.
@@ -159,9 +155,8 @@ train_op = optimizer.minimize(loss_op)
 correct_pred = tf.equal(tf.argmax(logits_test, 1), tf.cast(Y, tf.int64))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-X_T, _ = read_test_images(batch_size)
-logits_test_test = conv_net(X_T, N_CLASSES, dropout, reuse=True, is_training=False)
-test_pred = tf.argmax(logits_test_test, 1)
+logits_predict = conv_net(X_test, N_CLASSES, dropout, reuse=True, is_training=False)
+predict = tf.argmax(logits_predict, 1)
 
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
@@ -193,18 +188,18 @@ with tf.Session() as sess:
 
     print("Optimization Finished!")
 
-    # Save your model
-    saver.save(sess, 'my_tf_model')
+    print ("Predicting")
 
-    # Start training
     final_res = list()
+    for step in range(TOTAL_IMG):
+            res = sess.run([pred])
+            print res[0]
+            final_res.extend(res[0])
 
-    for step in range(1, int(math.ceil(float(TOTAL_IMG) / batch_size)) + 1):
-        res = sess.run(test_pred)
-        # if step % display_step == 0:
-        print(res[0])
-        final_res.extend(res[0])
-    print(final_res)
     writer = csv.writer(open("test.csv", "wb"))
     for idx, res in enumerate(final_res):
-        writer.writerow([str(idx) + ".jpg", res])
+        writer.writerow([str(idx) + ".jpg", int(res)])
+
+
+    # Save your model
+    saver.save(sess, 'my_tf_model')
