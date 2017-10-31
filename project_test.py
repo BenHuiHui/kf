@@ -11,10 +11,10 @@ N_CLASSES = 132 # CHANGE HERE, total number of classes
 IMG_HEIGHT = 64 # CHANGE HERE, the image height to be resized to
 IMG_WIDTH = 64 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
-TOTAL_IMG = 1
-# TOTAL_IMG = 200
 
 print tf.__version__
+# TOTAL_IMG = 48871
+TOTAL_IMG = 40
 
 
 def read_images(batch_size):
@@ -54,6 +54,11 @@ def read_images(batch_size):
 def conv_net(x, n_classes, dropout, reuse, is_training):
     # Define a scope for reusing the variables
     with tf.variable_scope('ConvNet', reuse=reuse):
+
+        #kernel = tf.get_variable('convo2d/kernel')
+        #print kernel
+        # kernel = tf.get_variable('ConvNet/conv2d/kernel:0')
+        # print kernel.eval()
 
         # Convolution Layer with 32 filters and a kernel size of 5
         conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
@@ -98,49 +103,43 @@ X, _ = read_images(batch_size)
 # Create another graph for testing that reuse the same weights
 logits_test = conv_net(X, N_CLASSES, dropout, reuse=False, is_training=False)
 
-# logits_test = tf.layers.conv2d(X, 32, 5, activation=tf.nn.relu)
-# dense1 = tf.layers.dense(conv1, N_CLASSES)
-# logits_test = tf.nn.softmax(dense1)
-
 # Evaluate model (with test logits, for dropout to be disabled)
 pred = tf.argmax(logits_test, 1)
 
-x = tf.placeholder(tf.int32, [None, 1], name='input_placeholder')
+# Initialize the variables (i.e. assign their default value)
+# init = tf.global_variables_initializer()
+
+# tf.reset_default_graph()
+# def main(argv=None):
+x = tf.placeholder(tf.int32, [1, None], name='input_placeholder')
+x = tf.placeholder(tf.int32, [None, 132], name='input_placeholder')
 
 # Start training
-with tf.Session() as sess:
-    # Initialize variables
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
+with tf.Graph().as_default() as g:
+    with tf.Session() as sess:
 
-    print([x.name for x in tf.global_variables()])
-    weights = sess.run('ConvNet/conv2d/kernel:0', feed_dict={})
-    print(weights)
-    saver = tf.train.import_meta_graph('my_tf_model.ckpt.meta')
-    saver.restore(sess, tf.train.latest_checkpoint('./'))
-    print([x.name for x in tf.global_variables()])
-    # print(tf.global_variables()[0])
+        saver = tf.train.import_meta_graph('my_tf_model.meta')
+        saver.restore(sess, tf.train.latest_checkpoint('./'))
+        print([val.name for val in tf.global_variables()])
+        # print(tf.global_variables()[0])
 
-    # Start the data queue
-    tf.train.start_queue_runners()
+        # Start the data queue
+        tf.train.start_queue_runners()
 
-    final_res = list()
+        # print 'Loaded kernel'
+        # print sess.run('ConvNet/conv2d/kernel:0', feed_dict= {})
 
-    weights = sess.run('ConvNet/conv2d/kernel:0', feed_dict={})
-    print(weights)
-    # x = tf.placeholder('float')
-    # output = tf.get_collection("output")[0]
-    #
-    # prediction = sess.run(output, feed_dict={x: X})
-    # print(prediction)
+        final_res = list()
 
-    for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
-        res = sess.run([pred])
-        if step % display_step == 0:
+        for step in range(1, int(math.ceil(float(TOTAL_IMG)/batch_size))+1):
+            res = sess.run(pred)
+            # if step % display_step == 0:
             print(res[0])
-        final_res.extend(res[0])
+            final_res.extend(res[0])
+        print(final_res)
+        writer = csv.writer(open("test.csv", "wb"))
+        for idx, res in enumerate(final_res):
+            writer.writerow([str(idx) + ".jpg", res])
 
-    writer = csv.writer(open("test.csv", "wb"))
-    for idx, res in enumerate(final_res):
-        writer.writerow([str(idx) + ".jpg", res])
-
+# if __name__ == '__main__':
+#    main()
