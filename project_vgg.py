@@ -8,13 +8,16 @@ from PIL import Image
 
 slim = tf.contrib.slim
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+os.chdir(dir_path)
+
 tfrecords_filename='invasive-train.tfrecords'
 im_width=224
 im_height=224
 
 #Hyper Parameter to play with
 batch_size=32
-num_epochs=20
+num_epochs=10
 
 lr = 0.001
 decay_rate=0.1
@@ -158,7 +161,7 @@ with tf.Session() as sess:
     coord.join(threads)
     print 'Training Done'
     saver = tf.train.Saver(slim.get_model_variables())
-    saver.save(sess, 'model.ckpt')
+    saver.save(sess, str(num_epochs) + 'model.ckpt')
     sess.close()
 
 tf.reset_default_graph()
@@ -181,7 +184,7 @@ with tf.Session() as sess:
     saver = tf.train.Saver()
     sess.run(tf.local_variables_initializer())
     sess.run(tf.global_variables_initializer())
-    saver.restore(sess, 'model.ckpt')
+    saver.restore(sess, str(num_epochs) + 'model.ckpt')
     
     for i, img_path in enumerate(test_images):
         print "\rProcessing %d/%d"%(i, len(test_images)),
