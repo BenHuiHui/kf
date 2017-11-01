@@ -14,7 +14,7 @@ im_height=224
 
 #Hyper Parameter to play with
 batch_size=32
-num_epochs=10
+num_epochs=20
 
 lr = 0.001
 decay_rate=0.1
@@ -185,14 +185,16 @@ with tf.Session() as sess:
     
     for i, img_path in enumerate(test_images):
         print "\rProcessing %d/%d"%(i, len(test_images)),
+        images.append(img_path)
+
         img = Image.open(os.path.join(test_imgdir, img_path))
         img = np.array(img.resize((im_width,im_height), Image.ANTIALIAS))
-        prob = sess.run(prediction, feed_dict={im_placeholder:np.expand_dims(img, axis=0)})
         
-        images.append(img_path)
-        test_labels.append(prob[0][1])
+        prob = sess.run([predicted_labels], feed_dict={im_placeholder:np.expand_dims(img, axis=0)})
+        print ('Prediction ', prob[0])
+        test_labels.extend(prob[0])
             
-    filename_output = "predictionVGG.csv"
+    filename_output = str(num_epochs) + "_predictionVGG.csv"
     print "Writing result to", filename_output
     saveImageList(images, test_labels, filename_output)
 
