@@ -1,0 +1,26 @@
+# Local run
+gcloud ml-engine local train \
+    --module-name trainer.task \
+    --package-path ./trainer \
+    -- \
+    --train-dir ../keras_image/train \
+    --eval-dir ../keras_image/eval \
+    --output-dir ../keras_output \
+    --eval-size 4887 \
+    --epochs 10
+
+# Cloud run
+round=4
+jobname="keras_resnet_${round}"
+gcloud ml-engine jobs submit training ${jobname} \
+    --staging-bucket gs://cs5242-bucket\
+    --runtime-version 1.0 \
+    --module-name trainer.task \
+    --package-path ./trainer \
+    --region us-central1 \
+    -- \
+    --train-dir ../keras_image/train \
+    --eval-dir ../keras_image/eval \
+    --output-dir "gs://cs5242-bucket/keras_output_${round}" \
+    --eval-size 4887 \
+    --epochs 10
