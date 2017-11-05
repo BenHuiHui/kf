@@ -4,7 +4,7 @@ import os
 import csv
 import math
 
-DATASET_PATH = 'transferred_test/'
+DATASET_PATH = 'transferred_test2/'
 
 # Image Parameters
 N_CLASSES = 132 # CHANGE HERE, total number of classes

@@ -4,7 +4,7 @@ import os
 import csv
 
 DATASET_PATH = 'transferred_train/'
-TEST_DATASET_PATH = 'transferred_test/'
+TEST_DATASET_PATH = 'transferred_test2/'
 DATA_FILE = 'train.csv'
 
 # Image Parameters
@@ -192,11 +192,12 @@ with tf.Session() as sess:
 
     final_res = list()
     for step in range(TOTAL_IMG):
-            res = sess.run([pred])
+            res = sess.run([predict])
             print res[0]
             final_res.extend(res[0])
 
     writer = csv.writer(open("test.csv", "wb"))
+    writer.writerow(["image_name", "category"])
     for idx, res in enumerate(final_res):
         writer.writerow([str(idx) + ".jpg", int(res)])
 

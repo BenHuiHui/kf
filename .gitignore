@@ -6,3 +6,10 @@ sampleSubmission.csv
 my_tf_model*
 checkpoint
 project2.py
+data/*
+cmle-quickstart/
+*.csv
+*.pyc
+resnet.py
+
+
