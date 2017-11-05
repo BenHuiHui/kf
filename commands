@@ -1,0 +1,38 @@
+cd cloudml-samples-master/flowers
+declare -r BUCKET_NAME="gs://cs5242-bucket"
+declare -r REGION="us-central1"
+declare -r PROJECT_ID=$(gcloud config list project --format "value(core.project)")
+declare -r JOB_NAME="food_${USER}_$(date +%Y%m%d_%H%M%S)"
+declare -r GCS_PATH="${BUCKET_NAME}/${USER}/${JOB_NAME}"
+declare -r DICT_FILE=gs://cs5242-bucket/dict.txt
+
+ declare -r MODEL_NAME=food
+ declare -r VERSION_NAME=v1
+
+ echo
+ echo "Using job id: " $JOB_NAME
+ set -v -e
+
+ python trainer/preprocess.py \
+    --input_dict "$DICT_FILE" \
+    --input_path "gs://cs5242-bucket/validate_input.csv" \
+    --output_path "${GCS_PATH}/preproc/eval" \
+    --cloud
+
+python trainer/preprocess.py \
+    --input_dict "$DICT_FILE" \
+    --input_path "gs://cs5242-bucket/train_input.csv" \
+    --output_path "${GCS_PATH}/preproc/train" \
+    --cloud
+
+gcloud ml-engine jobs submit training "$JOB_NAME" \
+    --stream-logs \
+    --module-name trainer.task \
+    --package-path trainer \
+    --staging-bucket "$BUCKET_NAME" \
+    --region "$REGION" \
+    --runtime-version=1.2 \
+    -- \
+    --output_path "${GCS_PATH}/training" \
+    --eval_data_paths "${GCS_PATH}/preproc/eval*" \
+    --train_data_paths "${GCS_PATH}/preproc/train*"
