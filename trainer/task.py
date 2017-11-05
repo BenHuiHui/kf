@@ -64,17 +64,17 @@ class Resnet():
 			for idx, p in prediction:
 				p_writer.writerow([str(idx) + ".jpg", str(int(p))])
 
-TRAIN_DATA = "data/transferred_train2/"
-VALIDATION_DATA = "data/transferred_valid2/"
-TEST_DATA = "data/transferred_test2/"
+# TRAIN_DATA = "data/transferred_train2/"
+# VALIDATION_DATA = "data/transferred_valid2/"
+# TEST_DATA = "data/transferred_test2/"
 
 def train_and_predict(train_data, validation_data, test_data):
 	r = Resnet()
 	r.createResnet()
 	batches_train = r.get_batches(train_data)
-	batches_validation = r.get_batches(validation_data)
+	batches_eval = r.get_batches(validation_data)
 	batches_test = r.get_batches(test_data)
-	r.fit(batches_train, batches_validation)
+	r.fit(batches_train, batches_eval)
 	r.predict(batches_test)
 
 if __name__ == '__main__':
@@ -193,31 +193,5 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  # Set python level verbosity
-  tf.logging.set_verbosity(args.verbosity)
-  # Set C++ Graph Execution level verbosity
-  os.environ['TF_CPP_MIN_LOG_LEVEL'] = str(
-      tf.logging.__dict__[args.verbosity] / 10)
-
-  # Run the training job
-  # learn_runner pulls configuration information from environment
-  # variables using tf.learn.RunConfig and uses this configuration
-  # to conditionally execute Experiment, or param server code
   hparams = hparam.HParams(**args.__dict__)
   train_and_predict(hparams.train_files, hparams.eval_files, hparams.test_files)
-
-  # learn_runner.run(
-  #     generate_experiment_fn(
-  #         min_eval_frequency=args.min_eval_frequency,
-  #         eval_delay_secs=args.eval_delay_secs,
-  #         train_steps=args.train_steps,
-  #         eval_steps=args.eval_steps,
-  #         export_strategies=[saved_model_export_utils.make_export_strategy(
-  #             model.SERVING_FUNCTIONS[args.export_format],
-  #             exports_to_keep=1,
-  #             default_output_alternative_key=None,
-  #         )]
-  #     ),
-  #     run_config=run_config.RunConfig(model_dir=args.job_dir),
-  #     hparams=hparam.HParams(**args.__dict__)
-  # )
