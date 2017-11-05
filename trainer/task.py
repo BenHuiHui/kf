@@ -68,11 +68,11 @@ class Resnet():
 # VALIDATION_DATA = "data/transferred_valid2/"
 # TEST_DATA = "data/transferred_test2/"
 
-def train_and_predict(train_data, validation_data, test_data):
+def train_and_predict(train_data, eval_data, test_data):
 	r = Resnet()
 	r.createResnet()
 	batches_train = r.get_batches(train_data)
-	batches_eval = r.get_batches(validation_data)
+	batches_eval = r.get_batches(eval_data)
 	batches_test = r.get_batches(test_data)
 	r.fit(batches_train, batches_eval)
 	r.predict(batches_test)
