@@ -23,59 +23,59 @@ import os
 import argparse
 
 class Resnet():
-	def __init__(self):
-		self.model = self.createResnet()
+    def __init__(self):
+        self.model = self.createResnet()
 
-	def createResnet(self):
-		base_model = ResNet50(weights = 'imagenet', include_top = False, input_shape = (224,224,3), input_tensor = None, pooling = None)
-		x = base_model.output
-		x = GlobalAveragePooling2D()(x)
-		x = Dropout(0.3)(x)
-		x = Dense(1024, activation='relu')(x)
-		x = Dropout(0.3)(x)
-		# predictions = Dense(132, activation='softmax')(x)
-		predictions = Dense(2, activation='softmax')(x)
-		model = Model(inputs=base_model.input, outputs=predictions)
+    def createResnet(self):
+        base_model = ResNet50(weights = 'imagenet', include_top = False, input_shape = (224,224,3), input_tensor = None, pooling = None)
+        x = base_model.output
+        x = GlobalAveragePooling2D()(x)
+        x = Dropout(0.3)(x)
+        x = Dense(1024, activation='relu')(x)
+        x = Dropout(0.3)(x)
+        # predictions = Dense(132, activation='softmax')(x)
+        predictions = Dense(2, activation='softmax')(x)
+        model = Model(inputs=base_model.input, outputs=predictions)
 
-		for layer in base_model.layers:
-			layer.trainable = False
+        for layer in base_model.layers:
+            layer.trainable = False
 
-		model.compile(optimizer=Adam(lr=0.01),loss='categorical_crossentropy', metrics=['accuracy'])
+        model.compile(optimizer=Adam(lr=0.01),loss='categorical_crossentropy', metrics=['accuracy'])
 
-		return model
+        return model
 
-	def get_batches(self, path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical'):
-
-		return gen.flow_from_directory(path, target_size=(224, 224),
+    def get_batches(self, path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical'):
+        print(path)
+        return gen.flow_from_directory(path, target_size=(224, 224),
                 class_mode=class_mode, shuffle=shuffle, batch_size=batch_size)
 
-	def fit(self, batches, val_batches, nb_epoch=1):
+    def fit(self, batches, val_batches, nb_epoch=1):
 
-		self.model.fit_generator(batches, 
+        self.model.fit_generator(batches,
                              steps_per_epoch=int(batches.samples/batches.batch_size),
                              epochs=nb_epoch,
-                             validation_data=val_batches, 
+                             validation_data=val_batches,
                              validation_steps=int(val_batches.samples/val_batches.batch_size))
 
-	def predict(self, batches):
-		prediction = self.model.predict_generator(batches, 1)
-		with open("prediction.csv", "w") as f:
-			p_writer = csv.writer(f, delimiter=',', lineterminator='\n')
-			for idx, p in prediction:
-				p_writer.writerow([str(idx) + ".jpg", str(int(p))])
+    def predict(self, batches):
+        prediction = self.model.predict_generator(batches, 1)
+        with open("prediction.csv", "w") as f:
+            p_writer = csv.writer(f, delimiter=',', lineterminator='\n')
+            for idx, p in prediction:
+                p_writer.writerow([str(idx) + ".jpg", str(int(p))])
 
 # TRAIN_DATA = "data/transferred_train2/"
 # VALIDATION_DATA = "data/transferred_valid2/"
 # TEST_DATA = "data/transferred_test2/"
 
 def train_and_predict(train_data, eval_data, test_data, num_epochs):
-	r = Resnet()
-	r.createResnet()
-	batches_train = r.get_batches(train_data)
-	batches_eval = r.get_batches(eval_data)
-	batches_test = r.get_batches(test_data)
-	r.fit(batches_train, batches_eval, num_epochs)
-	r.predict(batches_test)
+    r = Resnet()
+    r.createResnet()
+    batches_train = r.get_batches(train_data)
+    batches_eval = r.get_batches(eval_data)
+    batches_test = r.get_batches(test_data)
+    r.fit(batches_train, batches_eval, num_epochs)
+    r.predict(batches_test)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -110,6 +110,12 @@ if __name__ == '__main__':
   )
   parser.add_argument(
       '--eval-files',
+      help='GCS or local paths to evaluation data',
+      nargs='+',
+      required=True
+  )
+  parser.add_argument(
+      '--test-files',
       help='GCS or local paths to evaluation data',
       nargs='+',
       required=True
@@ -194,4 +200,4 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   hparams = hparam.HParams(**args.__dict__)
-  train_and_predict(hparams.train_files, hparams.eval_files, hparams.test_files, hparams.num_epochs)
+  train_and_predict(hparams.train_files[0], hparams.eval_files[0], hparams.test_files[0], hparams.num_epochs)
