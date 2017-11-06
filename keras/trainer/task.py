@@ -3,7 +3,6 @@ np.random.seed(42)
 import tensorflow as tf
 tf.set_random_seed(42)
 from tensorflow.python.lib.io import file_io
-import argparse
 from keras_resnet import Resnet
 
 # reset everything to rerun in jupyter
