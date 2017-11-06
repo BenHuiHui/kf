@@ -1,26 +1,42 @@
 from keras.applications.inception_v3 import InceptionV3
+from keras.applications.imagenet_utils import preprocess_input
 from keras.preprocessing import image
 from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
 from keras import backend as K
 from keras.preprocessing import image
+import multiprocessing as mp
+import image_gen_extended as T
 
-def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical'):
-  return gen.flow_from_directory(path, target_size=(299, 299),
+def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical', seed=11):
+  return gen.flow_from_directory(path, target_size=(299, 299), seed=11,
                                  class_mode=class_mode, shuffle=shuffle, batch_size=batch_size)
 
-datagen = image.ImageDataGenerator(
-        rotation_range=40,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        rescale=1./255,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        fill_mode='nearest')
+# num_processes = 4
+# pool = mp.Pool(processes=num_processes)
 
-train_batch = get_batches('keras_image/train', datagen, batch_size=100)
-eval_batch = get_batches('keras_image/eval', datagen, shuffle=False, batch_size=100)
+train_datagen = T.ImageDataGenerator(
+    featurewise_center=False,  # set input mean to 0 over the dataset
+    samplewise_center=False,  # set each sample mean to 0
+    featurewise_std_normalization=False,  # divide inputs by std of the dataset
+    samplewise_std_normalization=False,  # divide each input by its std
+    zca_whitening=False,  # apply ZCA whitening
+    rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+    width_shift_range=0.2,  # randomly shift images horizontally (fraction of total width)
+    height_shift_range=0.2,  # randomly shift images vertically (fraction of total height)
+    horizontal_flip=True,  # randomly flip images
+    vertical_flip=False, # randomly flip images
+    zoom_range=[.8, 1],
+    channel_shift_range=30,
+    fill_mode='reflect')
+train_datagen.config['random_crop_size'] = (299, 299)
+train_datagen.set_pipeline([T.random_transform, T.random_crop, T.preprocess_input])
+train_batch = get_batches('keras_image/train', train_datagen, batch_size=100, seed=11)
+
+test_datagen = T.ImageDataGenerator()
+test_datagen.config['random_crop_size'] = (299, 299)
+test_datagen.set_pipeline([T.random_transform, T.random_crop, T.preprocess_input])
+eval_batch = get_batches('keras_image/eval', test_datagen, shuffle=False, batch_size=100, seed=11)
 
 # create the base pre-trained model
 base_model = InceptionV3(weights='imagenet', include_top=False)
@@ -47,9 +63,6 @@ model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['ac
 # train the model on the new data for a few epochs
 model.fit_generator(train_batch, int(train_batch.samples/train_batch.batch_size), 20, validation_data=eval_batch, validation_steps=int(eval_batch.samples/eval_batch.batch_size))
 
-model.save('model.h5')
-
-
 # at this point, the top layers are well trained and we can start fine-tuning
 # convolutional layers from inception V3. We will freeze the bottom N layers
 # and train the remaining top layers.
@@ -75,4 +88,4 @@ model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossent
 # alongside the top Dense layers
 model.fit_generator(train_batch, int(train_batch.samples/train_batch.batch_size), 10, validation_data=eval_batch, validation_steps=int(eval_batch.samples/eval_batch.batch_size))
 
-model.save('model_fine_tune.h5')
+model.save('model.h5')
