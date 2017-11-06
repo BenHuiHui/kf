@@ -6,14 +6,14 @@ from keras.layers import Dense, GlobalAveragePooling2D
 from keras import backend as K
 from keras.preprocessing import image
 import multiprocessing as mp
-import tools.image_gen_extended as T
+import image_gen_extended as T
 
 def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical', seed=11):
-  return gen.flow_from_directory(path, target_size=(224, 224), seed=11, pool=None,
+  return gen.flow_from_directory(path, target_size=(224, 224), seed=11,
                                  class_mode=class_mode, shuffle=shuffle, batch_size=batch_size)
 
-num_processes = 4
-pool = mp.Pool(processes=num_processes)
+# num_processes = 4
+# pool = mp.Pool(processes=num_processes)
 
 train_datagen = T.ImageDataGenerator(
     featurewise_center=False,  # set input mean to 0 over the dataset
@@ -31,12 +31,12 @@ train_datagen = T.ImageDataGenerator(
     fill_mode='reflect')
 train_datagen.config['random_crop_size'] = (299, 299)
 train_datagen.set_pipeline([T.random_transform, T.random_crop, T.preprocess_input])
-train_batch = get_batches('keras_image/train', train_datagen, batch_size=100, seed=11, pool=pool)
+train_batch = get_batches('keras_image/train', train_datagen, batch_size=100, seed=11)
 
 test_datagen = T.ImageDataGenerator()
 test_datagen.config['random_crop_size'] = (299, 299)
 test_datagen.set_pipeline([T.random_transform, T.random_crop, T.preprocess_input])
-eval_batch = get_batches('keras_image/eval', test_datagen, shuffle=False, batch_size=100, seed=11, pool=pool)
+eval_batch = get_batches('keras_image/eval', test_datagen, shuffle=False, batch_size=100, seed=11)
 
 # create the base pre-trained model
 base_model = InceptionV3(weights='imagenet', include_top=False)
