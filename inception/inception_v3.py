@@ -4,13 +4,37 @@ from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
 from keras import backend as K
 from keras.preprocessing import image
+import multiprocessing as mp
 
-def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical'):
-  return gen.flow_from_directory(path, target_size=(224, 224),
+def get_batches(path, gen=image.ImageDataGenerator(), shuffle=True, batch_size=8, class_mode='categorical', seed=11):
+  return gen.flow_from_directory(path, target_size=(224, 224), seed=11, pool=None,
                                  class_mode=class_mode, shuffle=shuffle, batch_size=batch_size)
 
-train_batch = get_batches('keras_image/train', batch_size=100)
-eval_batch = get_batches('keras_image/eval', shuffle=False, batch_size=100)
+num_processes = 4
+pool = mp.Pool(processes=num_processes)
+
+train_datagen = image.ImageDataGenerator(
+    featurewise_center=False,  # set input mean to 0 over the dataset
+    samplewise_center=False,  # set each sample mean to 0
+    featurewise_std_normalization=False,  # divide inputs by std of the dataset
+    samplewise_std_normalization=False,  # divide each input by its std
+    zca_whitening=False,  # apply ZCA whitening
+    rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+    width_shift_range=0.2,  # randomly shift images horizontally (fraction of total width)
+    height_shift_range=0.2,  # randomly shift images vertically (fraction of total height)
+    horizontal_flip=True,  # randomly flip images
+    vertical_flip=False, # randomly flip images
+    zoom_range=[.8, 1],
+    channel_shift_range=30,
+    fill_mode='reflect')
+train_datagen.config['random_crop_size'] = (299, 299)
+train_datagen.set_pipeline([image.random_transform, image.random_crop, image.preprocess_input])
+train_batch = get_batches('keras_image/train', train_datagen, batch_size=100, seed=11, pool=pool)
+
+test_datagen = image.ImageDataGenerator()
+test_datagen.config['random_crop_size'] = (299, 299)
+test_datagen.set_pipeline([image.random_transform, image.random_crop, image.preprocess_input])
+eval_batch = get_batches('keras_image/eval', test_datagen, shuffle=False, batch_size=100, seed=11, pool=pool)
 
 # create the base pre-trained model
 base_model = InceptionV3(weights='imagenet', include_top=False)
@@ -56,7 +80,7 @@ for layer in model.layers[249:]:
 # we need to recompile the model for these modifications to take effect
 # we use SGD with a low learning rate
 from keras.optimizers import SGD
-model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
+model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # we train our model again (this time fine-tuning the top 2 inception blocks
 # alongside the top Dense layers
