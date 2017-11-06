@@ -32,7 +32,7 @@ for layer in base_model.layers:
     layer.trainable = False
 
 # compile the model (should be done *after* setting layers to non-trainable)
-model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # train the model on the new data for a few epochs
 model.fit_generator(train_batch, int(train_batch.samples/train_batch.batch_size), 20, validation_data=eval_batch, validation_steps=int(eval_batch.samples/eval_batch.batch_size))
