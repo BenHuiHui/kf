@@ -5,8 +5,11 @@ from collections import OrderedDict
 import pandas as pd
 import argparse
 from keras.preprocessing import image
+from keras.applications.inception_v3 import InceptionV3
+from keras.layers import Dense, GlobalAveragePooling2D
+from keras.models import Model
 
-def get_batches(path, gen=image.ImageDataGenerator(), shuffle=False, batch_size=8, class_mode='categorical'):
+def get_batches(path, gen=image.ImageDataGenerator(), shuffle=False, batch_size=64, class_mode='categorical'):
     return gen.flow_from_directory(path, target_size=(299, 299),
                                    class_mode=class_mode, shuffle=shuffle, batch_size=batch_size)
 
@@ -18,32 +21,52 @@ def saveImageList(images, labels, save_to_file):
     data = pd.DataFrame(dic)
     data.to_csv(save_to_file, index=None, header=['image_name', 'category'])
 
+def createModel(model_path):
+    base_model = InceptionV3(weights='imagenet', include_top=False)
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(1024, activation='relu')(x)
+    predictions = Dense(132, activation='softmax')(x)
+
+    # this is the model we will train
+    model = Model(input=base_model.input, output=predictions)
+    model.load_weights(model_path)
+    return model
+
+def preprocess_input(x):
+    x /= 255.
+    x -= 0.5
+    x *= 2.
+    return x
+
 def predict(output_dir, test_dir, model_path):
-    model_path = model_path
     res_path = output_dir + '/submit.csv'
 
-    model = load_model(model_path)
-    # X = None
-    # for i in range(8):
-    #     img = image.load_img("transferred_test/test/" +str(i)+ ".jpg", target_size=(299, 299))
-    #     x = image.img_to_array(img)
-    #     x = np.expand_dims(x, axis=0)
-    #     if X is None:
-    #         X =x
-    #     else:
-    #         X = np.concatenate([X, x])
-    # preds = model.predict(X)
 
-    datagen = image.ImageDataGenerator(
-        rescale=1. / 255,
-    )
-    test_batches = get_batches(test_dir, datagen)
-    preds = model.predict_generator(test_batches, 1)
+    model = createModel(model_path)
 
-    labels = [np.argmax(np.array(l)) for l in preds]
-    print(len(preds[0]), labels)
+    # model = load_model(model_path)
+    X = None
+    for i in range(401, 407):
+        img = image.load_img("keras_image/train/1/" +str(i)+ ".jpg", target_size=(299, 299))
+        x = image.img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        x = preprocess_input(x)
+        if X is None:
+            X =x
+        else:
+            X = np.concatenate([X, x])
+    preds = model.predict(X)
+
+    # datagen = image.ImageDataGenerator(
+    #     rescale=1. / 255,
+    # )
+    # test_batches = get_batches(test_dir, datagen)
+    # preds = model.predict_generator(test_batches, int(test_batches.samples/test_batches.batch_size)+1)
+
+    # labels = [np.argmax(np.array(l)) for l in preds]
+    labels = preds.argmax(axis=-1)
     images = np.array([(str(i) + ".jpg") for i in range(len(labels))])
-    print(images)
     saveImageList(images, labels, res_path)
 
 
