@@ -45,8 +45,8 @@ def predict(output_dir, test_dir, model_path):
 
     # model = load_model(model_path)
     X = None
-    for i in range(401, 408):
-        img = image.load_img("keras_image/train/1/" +str(i)+ ".jpg", target_size=(299, 299))
+    for i in range(0, 8):
+        img = image.load_img(test_dir + "/" + str(i)+ ".jpg", target_size=(299, 299))
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
