@@ -35,8 +35,6 @@ def createModel(model_path):
 
 def preprocess_input(x):
     x /= 255.
-    x -= 0.5
-    x *= 2.
     return x
 
 def predict(output_dir, test_dir, model_path):
@@ -47,7 +45,7 @@ def predict(output_dir, test_dir, model_path):
 
     # model = load_model(model_path)
     X = None
-    for i in range(401, 407):
+    for i in range(401, 408):
         img = image.load_img("keras_image/train/1/" +str(i)+ ".jpg", target_size=(299, 299))
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
